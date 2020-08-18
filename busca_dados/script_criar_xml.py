@@ -1,10 +1,7 @@
-
 import pandas as pd
 import xml.etree.ElementTree as xml
 
 import os
-
-## directory = nome da pasta
 
 def open_directory(directory):
 
@@ -19,21 +16,34 @@ def open_directory(directory):
         return "Directory not found"
 
 
+def get_all_files(dir_name):
+    folder_content = os.listdir(dir_name)
+    all_files = list()
+    for entry in folder_content:
+        entry_path = os.path.join(dir_name, entry)
+        if os.path.isdir(entry_path):
+            all_files = all_files + get_all_files(entry_path)
+        else:
+            all_files.append(entry_path)
+    return all_files
 
-def GenerateXML(df, root,filename):
+def identify_extension(file):
 
-    root = xml.Element(root)
+    return  os.path.splitext(file)[-1].lower()
+
+
+def createXML(df,root,file):
+
+    file = xml.SubElement(root, file)
 
     tags = df.columns
 
     for raws in df.iterrows():
 
 
-        raw = xml.SubElement(root, "raw")
+        raw = xml.SubElement(file, "raw")
 
         i = 0
-        print(len(raws[1]))
-        print(raws[1].iloc[2])
 
         for columns in tags:
 
@@ -42,11 +52,29 @@ def GenerateXML(df, root,filename):
 
             i = i +1
 
+    return  root
+
+def generate_allXML(path):
+
+    list_files = get_all_files(path)
+    root = xml.Element('file_csv')
+
+    for file in list_files:
+
+        if identify_extension(file) == ".csv":
+
+            df = pd.read_csv(file)
+            root = createXML(df,root,file.split('/')[-1])
+
+
     tree = xml.ElementTree(root)
 
-    with open(filename, "wb") as file:
+    with open("dataframe.xml", "wb") as file:
         tree.write(file)
 
-df = pd.read_csv("sao_paulo.csv")
 
-GenerateXML(df,"tag", "dataframe.xml")
+
+dir_name = open_directory("git_hub/dados/dados_squad_9")
+generate_allXML(dir_name)
+
+
