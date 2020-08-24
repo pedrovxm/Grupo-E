@@ -1,2 +1,2 @@
 # Grupo-E
-Repositório Grupo R
+Repositório Grupo E
